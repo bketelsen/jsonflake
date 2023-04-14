@@ -17,7 +17,6 @@
       systems = [ "x86_64-linux" "aarch64-darwin" "x86_64-darwin" ];
       imports = [
         inputs.nixos-flake.flakeModule
-        ./fleek.nix
       ];
 
       flake.homeModules.default = ./bling/default.nix;
@@ -43,16 +42,7 @@
             self.nixos-flake.lib.mkHomeConfiguration
               pkgs
               ({ pkgs, ... }: {
-                imports =
-                  if fleekConfig.bling == "high"
-                  then [ self.homeModules.high ]
-                  else
-                    if fleekConfig.bling == "low"
-                    then [ self.homeModules.low ]
-                    else
-                      if fleekConfig.bling == "none"
-                      then [ self.homeModules.none ]
-                      else [ self.homeModules.default ];
+                imports = [ self.homeModules.${fleekConfig.bling or "default"} ];
 
                 home.username = fleekConfig.username;
                 home.homeDirectory = "/${if pkgs.stdenv.isDarwin then "Users" else "home"}/${fleekConfig.username}";
