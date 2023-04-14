@@ -1,2 +1,2 @@
-nix build \
+export NIXPKGS_ALLOW_UNFREE=1; nix build --impure \
   .#homeConfigurations.${HOSTNAME}.activationPackage

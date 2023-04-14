@@ -20,8 +20,11 @@
         ./fleek.nix
       ];
 
-      flake.homeModules.default = ./home.nix;
-      flake.homeModules.high = ./bling/home.nix;
+      flake.homeModules.default = ./bling/default.nix;
+      flake.homeModules.high = ./bling/high.nix;
+      flake.homeModules.low = ./bling/low.nix;
+      flake.homeModules.none = ./bling/none.nix;
+
       flake.fleekConfig = fleekConfig;
 
       flake.templates.default = {

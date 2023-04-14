@@ -4,7 +4,9 @@
 # https://nix-community.github.io/home-manager/index.html#sec-usage-configuration
 { pkgs, ... }:
 let
-  fleekConfig = builtins.fromJSON (builtins.readFile ./.fleek.json);
+  fleekConfig = builtins.fromJSON (builtins.readFile ../.fleek.json);
+  userPackages = map (x: pkgs.${x}) fleekConfig.packages;
+
 in
 {
   imports = [
@@ -14,9 +16,8 @@ in
   # Nix packages to install to $HOME
   #
   # Search for packages here: https://search.nixos.org/packages
-  userPackages = map (x: pkgs.${x}) fleekConfig.packages;
 
-  home.packages = [
+  home.packages = with pkgs; [
     git
     htop 
     github-cli
