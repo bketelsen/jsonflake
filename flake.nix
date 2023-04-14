@@ -37,13 +37,23 @@
         };
       };
 
-      perSystem = { self', pkgs, ... }:
+      perSystem = { self', pkgs, lib, ... }:
         {
           legacyPackages.homeConfigurations.beast =
             self.nixos-flake.lib.mkHomeConfiguration
               pkgs
               ({ pkgs, ... }: {
-                imports = [ self.homeModules.high ];
+                imports =
+                  if fleekConfig.bling == "high"
+                  then [ self.homeModules.high ]
+                  else
+                    if fleekConfig.bling == "low"
+                    then [ self.homeModules.low ]
+                    else
+                      if fleekConfig.bling == "none"
+                      then [ self.homeModules.none ]
+                      else [ self.homeModules.default ];
+
                 home.username = fleekConfig.username;
                 home.homeDirectory = "/${if pkgs.stdenv.isDarwin then "Users" else "home"}/${fleekConfig.username}";
                 home.stateVersion = "22.11";

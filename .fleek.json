@@ -8,7 +8,7 @@
     "projects": "cd ~/projects",
     "ublue": "cd ~/projects/ublue"
   },
-  "bling": "high",
+  "bling": "low",
   "ejected": false,
   "flakedir": ".local/share/fleek",
   "git": {
