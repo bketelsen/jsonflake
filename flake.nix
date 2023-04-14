@@ -21,6 +21,7 @@
       ];
 
       flake.homeModules.default = ./home.nix;
+      flake.homeModules.high = ./bling/home.nix;
       flake.fleekConfig = fleekConfig;
 
       flake.templates.default = {
@@ -39,7 +40,7 @@
             self.nixos-flake.lib.mkHomeConfiguration
               pkgs
               ({ pkgs, ... }: {
-                imports = [ self.homeModules.default ];
+                imports = [ self.homeModules.high ];
                 home.username = fleekConfig.username;
                 home.homeDirectory = "/${if pkgs.stdenv.isDarwin then "Users" else "home"}/${fleekConfig.username}";
                 home.stateVersion = "22.11";
