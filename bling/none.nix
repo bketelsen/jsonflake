@@ -11,15 +11,14 @@ in
 {
   imports = [
     # Add your other home-manager modules here.
+    ./packages.nix
   ];
 
   # Nix packages to install to $HOME
   #
   # Search for packages here: https://search.nixos.org/packages
 
-  home.packages = with pkgs; [
-    git
-  ] ++ userPackages;
+  home.packages = none ++ userPackages;
 
 
   # Programs natively supported by home-manager.

@@ -1,60 +1,47 @@
 {
   inputs = {
-    # Principle inputs (updated by `nix run .#update`)
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    home-manager.url = "github:nix-community/home-manager";
-    home-manager.inputs.nixpkgs.follows = "nixpkgs";
-
-    flake-parts.url = "github:hercules-ci/flake-parts";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    flake-parts = { url = "github:hercules-ci/flake-parts"; inputs.nixpkgs-lib.follows = "nixpkgs"; };
+    home-manager = { url = "github:nix-community/home-manager"; inputs.nixpkgs.follows = "nixpkgs"; };
     nixos-flake.url = "github:bketelsen/nixos-flake";
   };
 
-  outputs = inputs@{ self, ... }:
-    let
-      fleekConfig = builtins.fromJSON (builtins.readFile ./.fleek.json);
-    in
-    inputs.flake-parts.lib.mkFlake { inherit inputs; } {
-      systems = [ "x86_64-linux" "aarch64-darwin" "x86_64-darwin" ];
-      imports = [
-        inputs.nixos-flake.flakeModule
-      ];
+  outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } {
+    systems = [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
 
-      flake.homeModules.default = ./bling/default.nix;
-      flake.homeModules.high = ./bling/high.nix;
-      flake.homeModules.low = ./bling/low.nix;
-      flake.homeModules.none = ./bling/none.nix;
+    imports = [
+      inputs.nixos-flake.flakeModule
+    ];
 
-      flake.fleekConfig = fleekConfig;
+    flake = { lib, ... }:
+      let
+        fleekConfig = lib.importJSON ./.fleek.json;
+      in
+      {
+        homeModules = inputs.nixpkgs.lib.genAttrs [ "high" "low" "none" "default" ] (x: ./bling/${x}.nix);
 
-      flake.templates.default = {
-        description = "A `home-manager` template providing useful tools & settings for Nix-based development";
-        path = builtins.path {
-          path = ./.;
-          filter = path: _:
-            inputs.nixpkgs.lib.hasSuffix ".nix" path ||
-            inputs.nixpkgs.lib.hasSuffix ".lock" path;
+        templates.default = {
+          description = "A `home-manager` template providing useful tools & settings for Nix-based development";
+          path = builtins.path { path = inputs.nixpkgs.lib.cleanSource ./.; filter = path: _: baseNameOf path != "build.sh"; };
         };
       };
 
-      perSystem = { self', pkgs, lib, ... }:
-        {
-          legacyPackages.homeConfigurations.beast =
-            self.nixos-flake.lib.mkHomeConfiguration
-              pkgs
-              ({ pkgs, ... }: {
-                imports = [ self.homeModules.${fleekConfig.bling or "default"} ];
+    perSystem = { pkgs, config, lib, ... }:
+      let
+        fleekConfig = lib.importJSON ./.fleek.json;
+      in
+      {
+        legacyPackages.homeConfigurations.beast = inputs.nixos-flake.lib.mkHomeConfiguration pkgs ({ pkgs, ... }: {
+          imports = [ config.flake.homeModules.${fleekConfig.bling or "default"} ];
 
-                home.username = fleekConfig.username;
-                home.homeDirectory = "/${if pkgs.stdenv.isDarwin then "Users" else "home"}/${fleekConfig.username}";
-                home.stateVersion = "22.11";
-              });
+          home = {
+            inherit (fleekConfig) username;
+            homeDirectory = "/${if pkgs.stdenv.isDarwin then "Users" else "home"}/${fleekConfig.username}";
+            stateVersion = "22.11";
+          };
+        });
+        packages.default = config.legacyPackages.homeConfigurations.beast.activationPackage;
 
-          # Enables 'nix run' to activate.
-          apps.default.program = self'.packages.activate-home;
-
-          # Enable 'nix build' to build the home configuration, but without
-          # activating.
-          packages.default = self'.legacyPackages.homeConfigurations.${fleekConfig.username}.activationPackage;
-        };
-    };
+      };
+  };
 }
