@@ -9,29 +9,23 @@
   outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } {
     systems = [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
 
-    imports = [
-      inputs.nixos-flake.flakeModule
-    ];
+    imports = [ inputs.nixos-flake.flakeModule ];
 
-    flake = { lib, ... }:
-      let
-        fleekConfig = lib.importJSON ./.fleek.json;
-      in
-      {
-        homeModules = inputs.nixpkgs.lib.genAttrs [ "high" "low" "none" "default" ] (x: ./bling/${x}.nix);
+    flake = {
+      homeModules = inputs.nixpkgs.lib.genAttrs [ "high" "low" "none" "default" ] (x: ./bling/${x}.nix);
 
-        templates.default = {
-          description = "A `home-manager` template providing useful tools & settings for Nix-based development";
-          path = builtins.path { path = inputs.nixpkgs.lib.cleanSource ./.; filter = path: _: baseNameOf path != "build.sh"; };
-        };
+      templates.default = {
+        description = "A `home-manager` template providing useful tools & settings for Nix-based development";
+        path = builtins.path { path = inputs.nixpkgs.lib.cleanSource ./.; filter = path: _: baseNameOf path != "build.sh"; };
       };
+    };
 
     perSystem = { pkgs, config, lib, ... }:
       let
         fleekConfig = lib.importJSON ./.fleek.json;
       in
       {
-        legacyPackages.homeConfigurations.beast = inputs.nixos-flake.lib.mkHomeConfiguration pkgs ({ pkgs, ... }: {
+        legacyPackages.homeConfigurations."beast" = inputs.nixos-flake.lib.mkHomeConfiguration pkgs ({ pkgs, ... }: {
           imports = [ config.flake.homeModules.${fleekConfig.bling or "default"} ];
 
           home = {
@@ -40,8 +34,8 @@
             stateVersion = "22.11";
           };
         });
-        packages.default = config.legacyPackages.homeConfigurations.beast.activationPackage;
 
+        packages.default = config.legacyPackages.homeConfigurations.${fleekConfig.username}.activationPackage;
       };
   };
 }
