@@ -17,7 +17,10 @@ in
   #
   # Search for packages here: https://search.nixos.org/packages
 
-  home.packages = userPackages;
+  home.packages = with pkgs; [
+    git
+  ] ++ userPackages;
+
 
 
   # Programs natively supported by home-manager.
